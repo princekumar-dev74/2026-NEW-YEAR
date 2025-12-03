@@ -1,0 +1,254 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Wishes Wall — Dark & Mobile First</title>
+
+<style>
+  :root{
+    --bg:#06060a;
+    --card:#0f1724;
+    --muted:#9aa4b2;
+    --accent:#3db7ff;
+    --neon:#4dd0ff;
+    --glass: rgba(255,255,255,0.03);
+    font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+  }
+
+  html,body{height:100%; margin:0; background: radial-gradient(ellipse at 20% 10%, rgba(77,208,255,0.04), transparent 10%), var(--bg); color:#e6eef8; -webkit-font-smoothing:antialiased;}
+  .wrap{min-height:100vh; display:flex; align-items:flex-start; justify-content:center; padding:28px 16px; box-sizing:border-box; position:relative; overflow:hidden;}
+
+  /* container */
+  .card{
+    width:100%; max-width:760px; background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+    border-radius:18px; box-shadow: 0 8px 30px rgba(0,0,0,0.6); padding:18px; border:1px solid rgba(255,255,255,0.03);
+    backdrop-filter: blur(6px);
+  }
+
+  header { display:flex; align-items:center; gap:12px; margin-bottom:14px; }
+  .brand {
+    display:flex; align-items:center; gap:8px;
+  }
+  .logo {
+    width:46px; height:46px; border-radius:10px; background:linear-gradient(135deg,var(--accent),var(--neon)); box-shadow: 0 6px 18px rgba(77,208,255,0.12), inset 0 -6px 14px rgba(255,255,255,0.02);
+    display:flex; align-items:center; justify-content:center; font-weight:900; color:#000000;
+  }
+  h1{font-size:18px; margin:0; letter-spacing:0.2px;}
+  p.lead{margin:0; font-size:12px; color:var(--muted);}
+
+  /* input row */
+  form.row{display:flex; gap:8px; margin-top:12px; align-items:flex-start;}
+  .input {
+    flex:1; display:flex; gap:8px; align-items:stretch;
+  }
+  textarea#wish { width:100%; min-height:56px; resize:vertical; max-height:200px;
+    padding:12px; border-radius:12px; border:1px solid rgba(255,255,255,0.03); background:transparent; color:inherit;
+    outline:none; font-size:15px; box-shadow: inset 0 0 0 1px rgba(255,255,255,0.01);
+  }
+  .controls{display:flex; flex-direction:column; gap:8px; min-width:92px;}
+  .btn {
+    display:inline-flex; align-items:center; justify-content:center; gap:8px; padding:10px 12px; border-radius:12px;
+    border:none; cursor:pointer; font-weight:600; font-size:14px;
+    background:linear-gradient(180deg, rgba(77,183,255,0.18), rgba(77,208,255,0.12));
+    color: #e8fbff; box-shadow: 0 6px 18px rgba(77,183,255,0.06), 0 2px 6px rgba(0,0,0,0.5);
+    transition: transform .12s ease, box-shadow .12s ease;
+  }
+  .btn:hover{ transform:translateY(-2px); box-shadow: 0 18px 36px rgba(77,183,255,0.08); }
+  .btn.secondary{
+    background:transparent; border:1px solid rgba(255,255,255,0.04); color:var(--muted); font-weight:600;
+  }
+
+  /* wishes list */
+  .list{ margin-top:18px; display:flex; flex-direction:column; gap:12px; max-height:400px; overflow-y:auto; }
+  .wish{
+    background: linear-gradient(180deg, rgba(255,255,255,0.01), rgba(255,255,255,0.005));
+    border-radius:12px; padding:12px; border:1px solid rgba(255,255,255,0.02);
+    font-size:14px; line-height:1.4; color:#dfe9f5;
+    word-break:break-word;
+  }
+  .wish.pinned{ border:1px solid var(--accent); background: rgba(61,183,255,0.12); }
+
+  .meta{ display:flex; justify-content:space-between; gap:8px; margin-top:8px; color:var(--muted); font-size:12px; }
+
+  /* link styling inside wishes */
+  .wish a{ color:var(--neon); text-decoration:underline; text-decoration-thickness:1px; }
+
+  /* small screens */
+  @media (max-width:520px){
+    .controls{ min-width:76px; }
+    .logo{ width:40px; height:40px; font-size:14px; }
+    h1{ font-size:16px; }
+    textarea#wish{ min-height:72px; }
+  }
+
+  /* snow canvas on top */
+  #snowCanvas{ position:fixed; left:0; top:0; width:100%; height:100%; pointer-events:none; z-index:0; mix-blend-mode:screen; opacity:0.8; }
+
+  /* subtle footer */
+  footer{ margin-top:16px; color:var(--muted); font-size:12px; display:flex; justify-content:space-between; gap:8px; align-items:center; flex-wrap:wrap;}
+  .small{ color:var(--muted); font-size:12px; }
+  .centered { display:flex; align-items:center; gap:6px; }
+</style>
+</head>
+<body>
+<canvas id="snowCanvas"></canvas>
+<div class="wrap">
+  <div class="card" role="main" aria-labelledby="title">
+    <header>
+      <div class="brand">
+        <div class="logo">W</div>
+        <div>
+          <h1 id="title">webkaizen</h1>
+          <p class="lead">Type your wish and submit.</p>
+        </div>
+      </div>
+    </header>
+
+    <form id="wishForm" class="row" autocomplete="off" onsubmit="return false;">
+      <div class="input">
+        <textarea id="wish" name="wish" placeholder="ADD YOUR WISHES FOR NEW YEAR...." required maxlength="800"></textarea>
+      </div>
+      <div class="controls">
+        <button id="submitBtn" class="btn" type="button">Submit</button>
+        <button id="clearBtn" class="btn secondary" type="button">Clear</button>
+      </div>
+    </form>
+
+    <div id="status" class="small" style="margin-top:10px;color:var(--muted)">Connecting...</div>
+
+    <div id="wishes" class="list" aria-live="polite" style="margin-top:12px"></div>
+  </div>
+</div>
+
+<!-- Firebase module -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
+import { getFirestore, collection, addDoc, getDocs, query, orderBy } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyBF9SD7_E_uDS9VoOreFY_u41H7Br4BLYc",
+  authDomain: "wishes-5baf0.firebaseapp.com",
+  projectId: "wishes-5baf0",
+  storageBucket: "wishes-5baf0.appspot.com",
+  messagingSenderId: "291273102978",
+  appId: "1:291273102978:web:cfcfa6cae7646c377ec69b",
+  measurementId: "G-250TG55C52"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+const wishesCol = collection(db, "wishes");
+
+const wishesContainer = document.getElementById('wishes');
+const statusEl = document.getElementById('status');
+
+function escapeHtml(s){
+  return String(s).replace(/[&<>"']/g, function(m){ return { '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[m]; });
+}
+
+function linkify(text){
+  const urlRegex = /(\bhttps?:\/\/[^\s<>]+)|(www\.[^\s<>]+)/gi;
+  return text.replace(urlRegex, function(m){
+    let url = m;
+    if(!/^https?:\/\//i.test(m)) url = 'http://'+m;
+    return `<a href="${escapeHtml(url)}" target="_blank" rel="noopener noreferrer">${escapeHtml(m)}</a>`;
+  });
+}
+
+function renderWish(doc, pinned=false){
+  const div = document.createElement('div');
+  div.className = pinned ? 'wish pinned' : 'wish';
+  const textHtml = linkify(escapeHtml(doc.text));
+  div.innerHTML = `<div class="content">${textHtml}</div>
+    <div class="meta"><div>${escapeHtml(doc.name||'Anonymous')}</div><div>${new Date(doc.createdAt).toLocaleString()}</div></div>`;
+  if(pinned){
+    wishesContainer.prepend(div);
+  } else {
+    wishesContainer.appendChild(div);
+  }
+}
+
+async function loadWishes(){
+  wishesContainer.innerHTML = '';
+  // pinned message
+  renderWish({ text: '2026 goal 10k+ follower', name:'Pinned', createdAt: Date.now() }, true);
+  
+  try{
+    statusEl.textContent = 'Loading wishes...';
+    const q = query(wishesCol, orderBy('createdAt','desc'));
+    const snapshot = await getDocs(q);
+    snapshot.forEach(docSnap => renderWish(docSnap.data()));
+    statusEl.textContent = `Loaded ${snapshot.size} wishes`;
+  }catch(e){
+    console.error(e);
+    statusEl.textContent = 'Error loading wishes';
+  }
+}
+
+async function submitWish(){
+  const txt = document.getElementById('wish').value.trim();
+  if(!txt) return;
+  const payload = { text: txt, name:'Guest', createdAt: Date.now() };
+  try{
+    document.getElementById('submitBtn').disabled = true;
+    statusEl.textContent = 'Saving...';
+    await addDoc(wishesCol, payload);
+    document.getElementById('wish').value = '';
+    statusEl.textContent = 'Saved ✓';
+    loadWishes();
+  }catch(e){
+    console.error(e);
+    alert('Save failed. Check console and Firebase rules.');
+    statusEl.textContent = 'Save failed';
+  } finally {
+    document.getElementById('submitBtn').disabled = false;
+  }
+}
+
+document.getElementById('submitBtn').addEventListener('click', submitWish);
+document.getElementById('clearBtn').addEventListener('click', ()=> document.getElementById('wish').value='');
+document.getElementById('wish').addEventListener('keydown', (e)=> { if(e.key==='Enter' && (e.ctrlKey || (e.shiftKey && window.innerWidth<520))) submitWish(); });
+
+loadWishes();
+
+/* ===== Simple snow effect ===== */
+(function(){
+  const canvas = document.getElementById('snowCanvas');
+  const ctx = canvas.getContext('2d');
+  let w,h,flakes=[];
+  function resize(){ w=canvas.width=window.innerWidth; h=canvas.height=window.innerHeight; }
+  window.addEventListener('resize', resize); resize();
+
+  function createFlakes(n=80){
+    flakes = [];
+    for(let i=0;i<n;i++){
+      flakes.push({ x:Math.random()*w, y:Math.random()*h, r:Math.random()*2+0.6, d:Math.random()*1.5+0.5, s:Math.random()*0.6+0.2 });
+    }
+  }
+  createFlakes(Math.min(120, Math.round(w/10)));
+
+  function draw(){
+    ctx.clearRect(0,0,w,h);
+    for(let f of flakes){
+      ctx.beginPath();
+      ctx.arc(f.x, f.y, f.r, 0, Math.PI*2);
+      ctx.fillStyle = `rgba(255,255,255,${0.06 + f.s*0.12})`;
+      ctx.fill();
+    }
+    update();
+    requestAnimationFrame(draw);
+  }
+  function update(){
+    for(let i=0;i<flakes.length;i++){
+      const f = flakes[i];
+      f.y += f.d + f.s;
+      f.x += Math.sin(f.d + f.s) * 0.6;
+      if(f.y>h+10){ flakes[i] = { x: Math.random()*w, y: -10, r: f.r, d: f.d, s: f.s }; }
+    }
+  }
+  draw();
+})();
+</script>
+</body>
+</html>
